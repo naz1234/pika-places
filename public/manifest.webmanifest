@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Pika Places",
+  "short_name": "Pika Places",
+  "description": "Places in Malaysia, saved for someday.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf8ef",
+  "theme_color": "#faf8ef",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

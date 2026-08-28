@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf8ef">
+  <meta name="description" content="A shared little place book for Malaysia. Save Facebook and TikTok links, screenshots, and ideas for your next day out.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pika Places</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-11 11M10 5H4v15h15v-6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-1-10 7 7 0 0 1 13-1 5.5 5.5 0 0 1-1 11M9 13l3 3 4-5"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></symbol>
+    <symbol id="i-trip" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="14" rx="3"/><path d="M9 7V3h6v4M9 11v5M15 11v5"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 4h16l2 12v4H2v-4zM2 15h6l2 3h4l2-3h6"/></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1"/><path d="m3 17 5-5 4 4 4-6 5 7"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 13 8-13 8z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v6M14 10v6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 9A8 8 0 1 0 20 16M20 3v6h-6"/></symbol>
+  </svg>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand"><img src="/assets/icon.svg" width="48" height="48" alt=""><div><h1>Pika Places</h1><p>Save now. Singgah later.</p></div></div>
+      <button id="settings-button" class="icon-button" aria-label="App settings"><svg class="icon"><use href="#i-settings"/></svg></button>
+    </header>
+    <div class="connection-row"><span class="country-label">MALAYSIA <span>· Shared place book</span></span><button id="sync-button" class="sync-pill" data-state="checking"><span class="status-dot"></span><span id="sync-label">Connecting</span></button></div>
+    <section id="setup-banner" class="notice" hidden><strong>Cloud setup needed</strong><p>Follow <span class="mono">CLOUDFLARE-SETUP.md</span> in your ZIP to connect the shared database. Pending changes stay on this device until it is connected.</p></section>
+    <section id="storage-banner" class="notice" hidden><strong>Media storage is not connected</strong><p>Links and notes can sync. Screenshots and videos need the R2 binding named <span class="mono">MEDIA</span>.</p></section>
+    <main>
+      <div id="browse-controls">
+        <label class="search-field"><svg class="icon"><use href="#i-search"/></svg><input id="search" type="search" placeholder="Search places, food or area" aria-label="Search places, food or area"></label>
+        <div id="area-filters" class="area-filters" role="group" aria-label="Filter by area"></div>
+        <div class="filter-row"><select id="state-filter" aria-label="Filter by state"><option value="">All states</option></select><select id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select><select id="status-filter" aria-label="Filter by visit status"><option value="">All visits</option><option value="want">Want to visit</option><option value="planned">Planned</option><option value="visited">Visited</option></select></div>
+      </div>
+      <div class="section-heading"><div><h2 id="view-title">Saved inspiration</h2><p id="result-count" aria-live="polite">Loading your places…</p></div><button id="clear-filters" class="text-button" hidden>Clear filters</button></div>
+      <div id="collection-filter" class="active-collection" hidden></div>
+      <section id="place-grid" class="place-grid" aria-label="Saved places"></section>
+      <section id="empty-state" class="empty-state" hidden><div class="empty-icon"><svg class="icon"><use href="#i-bookmark"/></svg></div><h3 id="empty-title">Your next good find goes here.</h3><p id="empty-copy">That café in Melaka. A food stop in Klang. Keep the post, add a screenshot, and find it when you’re nearby.</p><button id="empty-add" class="button primary">Save your first place</button></section>
+    </main>
+  </div>
+  <div class="add-dock"><button id="add-button" class="button primary add-place"><svg class="icon"><use href="#i-plus"/></svg>Save a link or screenshot</button></div>
+  <nav class="bottom-nav" aria-label="Main navigation"><div>
+    <button data-view="saved" aria-current="page"><svg class="icon"><use href="#i-bookmark"/></svg><span>Saved</span></button>
+    <button data-view="favourites"><svg class="icon"><use href="#i-star"/></svg><span>Favourites</span></button>
+    <button data-view="trips"><svg class="icon"><use href="#i-trip"/></svg><span>Trips</span></button>
+    <button data-view="inbox"><svg class="icon"><use href="#i-inbox"/></svg><span>To identify</span></button>
+  </div></nav>
+  <dialog id="editor" class="sheet" aria-labelledby="editor-title">
+    <div class="sheet-heading"><div><h2 id="editor-title">Save a place</h2><p id="editor-save-status" aria-live="polite">Details save automatically</p></div><button id="close-editor" class="icon-button" aria-label="Close place"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <form id="place-form" novalidate>
+      <label>Facebook / TikTok / other post link<input name="source_url" type="url" maxlength="2048" inputmode="url" placeholder="Paste the original post link" autocomplete="off"></label>
+      <div class="upload-box"><svg class="icon"><use href="#i-photo"/></svg><div><strong>Keep a copy of the good stuff</strong><p>A link can disappear. Upload a screenshot or a video you’re allowed to save.</p></div><label class="button secondary upload-label">Add media<input id="file-input" type="file" accept="image/*,video/mp4,video/webm" multiple></label></div>
+      <p class="field-help">Up to 8 files per place · 25 MB per file. Photos are resized for faster uploads. Media needs internet to view on another device.</p>
+      <div id="editor-media" class="media-gallery"></div>
+      <label>Place name<input name="title" maxlength="120" placeholder="E.g. a café in Melaka" autocomplete="off"></label>
+      <div class="form-row"><label>State / territory<select name="state"><option value="">Not sure yet</option></select></label><label>Town / area<input name="area" maxlength="80" list="area-suggestions" placeholder="E.g. Klang" autocomplete="off"></label></div>
+      <datalist id="area-suggestions"><option value="Klang"><option value="Melaka City"><option value="Johor Bahru"><option value="Muar"><option value="Batu Pahat"><option value="Shah Alam"><option value="Kuala Lumpur"><option value="Ayer Keroh"></datalist>
+      <label>Google Maps / Waze / Apple Maps link<input name="map_url" type="url" maxlength="2048" inputmode="url" placeholder="Optional — add the exact location" autocomplete="off"></label>
+      <div class="form-row"><label>Category<select name="category"></select></label><label>Visit status<select name="status"><option value="want">Want to visit</option><option value="planned">Planned</option><option value="visited">Visited</option></select></label></div>
+      <label>Trip / collection<input name="collection" maxlength="80" list="trip-suggestions" placeholder="Optional — e.g. Melaka weekend" autocomplete="off"></label><datalist id="trip-suggestions"></datalist>
+      <label>My notes<textarea name="notes" maxlength="3000" rows="3" placeholder="What to try, parking tips, who to go with…"></textarea></label>
+      <label class="check-label"><input name="favourite" type="checkbox">Keep in favourites</label>
+      <p id="form-error" class="form-error" role="alert" hidden></p>
+      <div class="editor-actions"><button type="button" id="trash-place" class="button danger"><svg class="icon"><use href="#i-trash"/></svg>Move to Trash</button><button type="submit" class="button primary">Done</button></div>
+    </form>
+  </dialog>
+  <dialog id="settings" class="small-dialog" aria-labelledby="settings-title"><div class="sheet-heading"><h2 id="settings-title">Your shared place book</h2><button data-close="settings" class="icon-button" aria-label="Close settings"><svg class="icon"><use href="#i-close"/></svg></button></div><p><strong>Public, with no login or PIN.</strong> Anyone with this link can view, add, edit, download media, and move places to Trash. Don’t upload private information.</p><div class="settings-actions"><button id="open-trash" class="button secondary"><svg class="icon"><use href="#i-trash"/></svg>View Trash</button><button id="export-data" class="button secondary">Export place details (JSON)</button></div><p class="field-help">The JSON export contains place details and media links, not the media files themselves. The owner should also back up D1 and R2.</p><h3>On your phone</h3><p>Open in Safari and use Share → Add to Home Screen. Use the same site address on every device.</p><p class="field-help">Saved details can be read offline after the first visit. Pending edits retry when the app is open and internet returns. An uploaded screenshot or video is a separate copy; a post link alone is not a backup.</p><p class="app-version">Pika Places 1.0 · Made for little detours.</p></dialog>
+  <dialog id="sync-dialog" class="small-dialog" aria-labelledby="sync-title"><div class="sheet-heading"><h2 id="sync-title">Sync status</h2><button data-close="sync-dialog" class="icon-button" aria-label="Close sync status"><svg class="icon"><use href="#i-close"/></svg></button></div><p id="sync-detail" aria-live="polite"></p><div id="pending-list"></div><button id="retry-sync" class="button primary"><svg class="icon"><use href="#i-refresh"/></svg>Retry sync</button><p class="field-help">Pending changes are stored in this browser, not backed up to the cloud yet. Keep the app open until it says “Up to date”.</p></dialog>
+  <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">Move this place to Trash?</h2><p>It will disappear from the shared list on every device. You can restore it from Settings → Trash.</p><div class="editor-actions"><button id="cancel-trash" class="button secondary">Cancel</button><button id="confirm-trash" class="button danger">Move to Trash</button></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript><p class="notice">Please enable JavaScript to use Pika Places and sync saved places.</p></noscript>
+</body>
+</html>

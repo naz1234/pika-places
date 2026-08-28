@@ -1,0 +1,11 @@
+// Optional CLI deployment configuration. Dashboard Git deployment does not need this file.
+// Copy to wrangler.jsonc ONLY if choosing the CLI route, and replace the database ID.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pika-places",
+  "pages_build_output_dir": "public",
+  "compatibility_date": "2026-08-28",
+  "d1_databases": [{ "binding": "DB", "database_name": "pika-places-db", "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "pika-places-media" }],
+  "vars": { "MAX_PLACES": "1000", "MAX_STORAGE_MB": "512", "WRITES_PER_MINUTE": "90" }
+}
