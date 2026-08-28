@@ -1,4 +1,4 @@
-import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, mapLink, matchPlace, safeUrl, sourceName } from './model.js';
+import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, mapLink, matchPlace, quickLocationFilter, safeUrl, sourceName } from './model.js';
 import { openStore } from './store.js';
 import { SyncEngine } from './sync.js';
 
@@ -25,11 +25,11 @@ fillOptions($('state-filter'), STATES); fillOptions($('category-filter'), CATEGO
 fillOptions($('place-form').elements.state, STATES); fillOptions($('place-form').elements.category, CATEGORIES);
 
 function renderAreas() {
-  const selected = filters.area;
+  const selected = filters.state || filters.area;
   const all = [...new Set(['Melaka', 'Johor', 'Klang', ...records.filter(p => !p.deleted_at).flatMap(p => [p.state, p.area]).filter(Boolean)])];
   const root = $('area-filters'); const scroll = root.scrollLeft; root.replaceChildren();
   for (const value of ['', ...all]) {
-    const b = button(value || 'All', 'area-chip', () => { filters.area = value; filters.state = ''; $('state-filter').value = ''; render(); });
+    const b = button(value || 'All', 'area-chip', () => { Object.assign(filters, quickLocationFilter(value)); $('state-filter').value = filters.state; render(); });
     b.setAttribute('aria-pressed', String(selected === value)); root.append(b);
   }
   root.scrollLeft = scroll;

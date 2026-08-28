@@ -4,6 +4,9 @@ export const STATUSES = ['want', 'planned', 'visited'];
 export const DEFAULT_PLACE = { title: '', source_url: '', state: '', area: '', category: 'Food', map_url: '', notes: '', status: 'want', favourite: false, collection: '' };
 export const FIELD_LIMITS = { title: 120, source_url: 2048, state: 60, area: 80, category: 24, map_url: 2048, notes: 3000, status: 12, collection: 80 };
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export function quickLocationFilter(value = '') {
+  return STATES.includes(value) ? { state: value, area: '' } : { state: '', area: value };
+}
 export function sourceName(value = '') {
   try {
     const host = new URL(value).hostname.toLowerCase();
