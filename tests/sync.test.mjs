@@ -39,7 +39,7 @@ test('snapshot version guard does not replace newer cloud records with older res
 });
 test('Malaysia filtering and source recognition do not confuse lookalike domains',()=>{
   const p={title:'Breakfast',area:'Klang',state:'Selangor',notes:'Good roti',category:'Food',status:'want',collection:'Weekend'};
-  assert.ok(matchPlace(p,{area:'Klang'}));assert.ok(matchPlace(p,{area:'Selangor',query:'roti'}));assert.ok(!matchPlace(p,{area:'Johor'}));assert.ok(!matchPlace(p,{view:'inbox'}));assert.equal(sourceName('https://tiktok.com.evil.test'),'Link');assert.equal(safeUrl('javascript:alert(1)'),'');
+  assert.ok(matchPlace(p,{area:'Klang'}));assert.ok(matchPlace(p,{area:'Selangor',query:'roti'}));assert.ok(!matchPlace(p,{area:'Johor'}));assert.ok(matchPlace(p,{collection:'Weekend'}));assert.ok(!matchPlace(p,{collection:'Other'}));assert.equal(sourceName('https://tiktok.com.evil.test'),'Link');assert.equal(safeUrl('javascript:alert(1)'),'');
 });
 test('outbox projection never resurrects a tombstone with a pending edit',()=>{
   const projected=projectPlaces([{id:'x',title:'Gone',deleted_at:'2026-01-01',media:[]}],[{id:'j',placeId:'x',kind:'patch',order:1,data:{title:'Stale'}}]);assert.equal(projected[0].title,'Gone');assert.ok(projected[0].deleted_at);

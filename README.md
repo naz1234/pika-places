@@ -10,7 +10,6 @@ A mobile-first shared place book for Malaysia. Save the food spots, cafés, stay
 - Search and filter by state, town/area, category and visit status.
 - Quick filters for Melaka, Johor and Klang, plus areas you add.
 - Original-post link, separate map link, notes, favourites and trip collections.
-- “To identify” inbox for places without a known location.
 - Automatic field saving after a short pause; no Save button is required in the form.
 - Shared records in D1 and uploaded screenshots/photos/videos in R2.
 - Automatic cross-device refresh while the app is open, normally within about five seconds of a successful save.

@@ -23,7 +23,6 @@ export function mapLink(place) {
 export function matchPlace(place, { query = '', area = '', category = '', status = '', collection = '', view = 'saved' } = {}) {
   if (view === 'trash' ? !place.deleted_at : !!place.deleted_at) return false;
   if (view === 'favourites' && !place.favourite) return false;
-  if (view === 'inbox' && (place.state || place.area || place.map_url)) return false;
   const haystack = [place.title, place.area, place.state, place.notes, place.category, place.collection, sourceName(place.source_url)].join(' ').toLowerCase();
   return (!query || haystack.includes(query.toLowerCase())) && (!area || place.area === area || place.state === area) && (!category || place.category === category) && (!status || place.status === status) && (!collection || place.collection === collection);
 }

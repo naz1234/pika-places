@@ -77,7 +77,7 @@ function render() {
   const pendingIds = new Set(records.flatMap(p => p.media.filter(m => m.pending).map(m => m.id)));
   for (const [key, value] of blobUrls) if (!pendingIds.has(key)) { URL.revokeObjectURL(value); blobUrls.delete(key); }
   for (const b of document.querySelectorAll('[data-view]')) { if (b.dataset.view === filters.view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
-  const titles = { saved: 'Saved inspiration', favourites: 'The favourites', inbox: 'Places to identify', trips: 'Little trips, good finds', trash: 'Trash' };
+  const titles = { saved: 'Saved inspiration', favourites: 'The favourites', trips: 'Little trips, good finds', trash: 'Trash' };
   $('view-title').textContent = titles[filters.view]; $('browse-controls').hidden = filters.view === 'trips';
   $('clear-filters').hidden = !['query', 'area', 'state', 'category', 'status', 'collection'].some(k => filters[k]);
   $('collection-filter').hidden = !filters.collection; $('collection-filter').textContent = `Trip: ${filters.collection}`;
@@ -98,7 +98,6 @@ function render() {
   let title = 'Your next good find goes here.', copy = 'That café in Melaka. A food stop in Klang. Keep the post, add a screenshot, and find it when you’re nearby.';
   if (isFiltered) { title = 'No places match just yet.'; copy = 'Try a different area, category or search.'; }
   else if (filters.view === 'favourites') { title = 'Keep the best ones close.'; copy = 'Tap the star on a saved place to find it here.'; }
-  else if (filters.view === 'inbox') { title = 'All locations sorted.'; copy = 'Posts without a state, area or map link appear here until you identify the place.'; }
   else if (filters.view === 'trips') { title = 'A few good stops make a trip.'; copy = 'Open a place and give it a Trip / collection name, such as “Melaka weekend”. Places with the same name stay together.'; }
   else if (filters.view === 'trash') { title = 'Nothing in Trash.'; copy = 'Places moved to Trash can be restored here. Only the owner can permanently clean up storage.'; }
   $('empty-title').textContent = title; $('empty-copy').textContent = copy;
