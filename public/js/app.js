@@ -1,4 +1,4 @@
-import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, mapLink, matchPlace, quickLocationFilter, safeUrl, sourceName } from './model.js';
+import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, mapLink, matchPlace, quickLocationFilter, safeUrl, sourceName, stateForTown, townSuggestions } from './model.js';
 import { openStore } from './store.js';
 import { SyncEngine } from './sync.js';
 
@@ -33,6 +33,10 @@ function renderAreas() {
     b.setAttribute('aria-pressed', String(selected === value)); root.append(b);
   }
   root.scrollLeft = scroll;
+}
+function renderTownSuggestions() {
+  const state = $('place-form').elements.state.value;
+  $('area-suggestions').replaceChildren(...townSuggestions(state, records).map(town => new Option(town, town)));
 }
 function clearFilters() {
   Object.assign(filters, { query: '', area: '', category: '', status: '', state: '', collection: '' });
@@ -102,6 +106,7 @@ function render() {
   else if (filters.view === 'trash') { title = 'Nothing in Trash.'; copy = 'Places moved to Trash can be restored here. Only the owner can permanently clean up storage.'; }
   $('empty-title').textContent = title; $('empty-copy').textContent = copy;
   $('empty-add').hidden = isFiltered || filters.view !== 'saved';
+  if (editor) renderTownSuggestions();
   renderEditorMedia(); renderPending();
   const trips = [...new Set(records.map(p => p.collection).filter(Boolean))]; $('trip-suggestions').replaceChildren(...trips.map(t => new Option(t, t)));
 }
@@ -145,7 +150,7 @@ function openEditor(placeId = null) {
   $('editor-save-status').textContent = place?.deleted_at ? 'Restore from Trash before editing' : 'Details save automatically';
   $('trash-place').hidden = !place || !!place.deleted_at; showFormError('');
   for (const el of $('place-form').elements) el.disabled = !!place?.deleted_at && el.type !== 'submit';
-  renderEditorMedia(true); $('editor').showModal();
+  renderTownSuggestions(); renderEditorMedia(true); $('editor').showModal();
   // Avoid opening the keyboard automatically when reviewing an existing place.
   $('close-editor').focus({ preventScroll: true });
 }
@@ -246,9 +251,13 @@ $('close-editor').addEventListener('click',()=>void closeEditor());
 $('editor').addEventListener('cancel',e=>{e.preventDefault();void closeEditor();});
 $('place-form').addEventListener('submit',e=>{e.preventDefault();void closeEditor();});
 $('place-form').addEventListener('input',e=>{if(Object.hasOwn(DEFAULT_PLACE,e.target.name)) scheduleSave();});
+$('place-form').elements.state.addEventListener('change',()=>{renderTownSuggestions();scheduleSave();});
 $('place-form').elements.area.addEventListener('change',e=>{
-  const states={'klang':'Selangor','shah alam':'Selangor','melaka city':'Melaka','ayer keroh':'Melaka','johor bahru':'Johor','muar':'Johor','batu pahat':'Johor','kuala lumpur':'Kuala Lumpur'};
-  if(!$('place-form').elements.state.value && states[e.target.value.trim().toLowerCase()]) {$('place-form').elements.state.value=states[e.target.value.trim().toLowerCase()];scheduleSave();}
+  const state = stateForTown(e.target.value, records);
+  if (!$('place-form').elements.state.value && state) {
+    $('place-form').elements.state.value = state;
+    renderTownSuggestions(); scheduleSave();
+  }
 });
 $('file-input').addEventListener('change',e=>void addFiles([...e.target.files]));
 $('trash-place').addEventListener('click',async()=>{if(!await saveEditor()) return; $('confirm-dialog').showModal();});

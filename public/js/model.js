@@ -4,8 +4,33 @@ export const STATUSES = ['want', 'planned', 'visited'];
 export const DEFAULT_PLACE = { title: '', source_url: '', state: '', area: '', category: 'Food', map_url: '', notes: '', status: 'want', favourite: false, collection: '' };
 export const FIELD_LIMITS = { title: 120, source_url: 2048, state: 60, area: 80, category: 24, map_url: 2048, notes: 3000, status: 12, collection: 80 };
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export const TOWNS_BY_STATE = {
+  Johor: ['Johor Bahru', 'Muar', 'Batu Pahat'],
+  Melaka: ['Melaka City', 'Ayer Keroh'],
+  Selangor: ['Klang', 'Shah Alam'],
+  'Kuala Lumpur': ['Kuala Lumpur']
+};
 export function quickLocationFilter(value = '') {
   return STATES.includes(value) ? { state: value, area: '' } : { state: '', area: value };
+}
+export function townSuggestions(state = '', places = []) {
+  const defaults = state ? (TOWNS_BY_STATE[state] || []) : Object.values(TOWNS_BY_STATE).flat();
+  const saved = places
+    .filter(place => !place.deleted_at && place.area && (!state || place.state === state))
+    .map(place => place.area.trim())
+    .filter(Boolean);
+  const unique = new Map();
+  for (const town of [...defaults, ...saved]) if (!unique.has(town.toLowerCase())) unique.set(town.toLowerCase(), town);
+  return [...unique.values()];
+}
+export function stateForTown(value = '', places = []) {
+  const town = value.trim().toLowerCase();
+  if (!town) return '';
+  for (const [state, towns] of Object.entries(TOWNS_BY_STATE)) if (towns.some(name => name.toLowerCase() === town)) return state;
+  const savedStates = new Set(places
+    .filter(place => !place.deleted_at && place.area?.trim().toLowerCase() === town && place.state)
+    .map(place => place.state));
+  return savedStates.size === 1 ? [...savedStates][0] : '';
 }
 export function sourceName(value = '') {
   try {
