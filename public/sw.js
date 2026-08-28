@@ -1,5 +1,5 @@
-const CACHE = 'pika-shell-v1';
-const SHELL = ['/', '/index.html', '/styles.css', '/js/app.js', '/js/model.js', '/js/store.js', '/js/sync.js', '/assets/icon.svg', '/assets/icon-192.png', '/assets/icon-512.png', '/manifest.webmanifest'];
+const CACHE = 'pika-shell-v2-family-icon';
+const SHELL = ['/', '/index.html', '/styles.css', '/js/app.js', '/js/model.js', '/js/store.js', '/js/sync.js', '/assets/pika-places-favicon-32.png', '/assets/pika-places-apple-touch-180.png', '/assets/pika-places-192.png', '/assets/pika-places-512.png', '/manifest.webmanifest'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))); });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('pika-shell-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
