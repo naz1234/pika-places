@@ -6,7 +6,7 @@ A mobile-first shared place book for Malaysia. Save the food spots, cafés, stay
 
 ## Included
 
-- Cream, yellow and forest-green phone interface; responsive desktop layout.
+- Peach, coral and lavender phone interface with navy text, matched to the Pika Places family icon; responsive desktop layout.
 - Search and filter by state, town/area, category and visit status.
 - Quick filters for Melaka, Johor and Klang, plus areas you add.
 - Original-post link, separate map link, notes, favourites and trip collections.

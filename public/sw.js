@@ -1,4 +1,4 @@
-const CACHE = 'pika-shell-v2-family-icon';
+const CACHE = 'pika-shell-v3-family-theme';
 const SHELL = ['/', '/index.html', '/styles.css', '/js/app.js', '/js/model.js', '/js/store.js', '/js/sync.js', '/assets/pika-places-favicon-32.png', '/assets/pika-places-apple-touch-180.png', '/assets/pika-places-192.png', '/assets/pika-places-512.png', '/manifest.webmanifest'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))); });
 self.addEventListener('activate', event => {
