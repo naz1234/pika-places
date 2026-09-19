@@ -1,4 +1,6 @@
 import { CATEGORIES, DEFAULT_PLACE, FIELD_LIMITS, MAX_FILE_BYTES, STATES, STATUSES, safeUrl } from '../public/js/model.js';
+import { LocationError, resolveMapLocation } from './map-location.js';
+import { mapUrl } from '../public/js/map-location.js';
 
 export class HttpError extends Error {
   constructor(status, message, code = 'request_error') { super(message); this.status = status; this.code = code; }
@@ -65,13 +67,33 @@ function writeGuard(request) {
   // This is a CSRF safeguard, NOT authentication. The API is intentionally public.
   assert(request.headers.get('x-pika-client') === '1', 403, 'Missing app request header.');
 }
-async function rateLimit(request, env) {
+async function rateLimit(request, env, group = 'writes', maximum) {
   const minute = Math.floor(Date.now() / 60000);
-  const key = await hash(`${request.headers.get('cf-connecting-ip') || 'local'}:${minute}`);
-  const max = limit(env, 'WRITES_PER_MINUTE', 90, 600);
+  const key = await hash(`${group}:${request.headers.get('cf-connecting-ip') || 'local'}:${minute}`);
+  const max = maximum || limit(env, 'WRITES_PER_MINUTE', 90, 600);
   const row = await env.DB.prepare('INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1 RETURNING count').bind(key, (minute + 2) * 60000).first();
   await env.DB.prepare('DELETE FROM rate_limits WHERE expires_at < ?').bind(Date.now()).run();
   assert(row.count <= max, 429, 'Too many changes at once. Sync will retry shortly.', 'rate_limited');
+}
+async function detectMapLocation(request, env) {
+  assert(request.headers.get('content-type')?.split(';')[0] === 'application/json', 415, 'Send a map link as JSON.');
+  let payload;
+  try { payload = JSON.parse(new TextDecoder().decode(await readBytes(request, 4096))); }
+  catch (error) { if (error instanceof HttpError) throw error; throw new HttpError(400, 'Invalid JSON.'); }
+  assert(typeof payload?.url === 'string' && payload.url.length <= 2048 && mapUrl(payload.url), 400, 'Use a Google Maps, Waze or Apple Maps link.');
+  await rateLimit(request, env, 'map-location', 15);
+  const cache = globalThis.caches?.default;
+  const cacheKey = new Request(`${new URL(request.url).origin}/api/map-location-cache/${await hash(payload.url)}`);
+  const cached = await cache?.match(cacheKey);
+  if (cached) return json(await cached.json());
+  try {
+    const location = await resolveMapLocation(payload.url, { photonBase: env.PHOTON_BASE_URL || 'https://photon.komoot.io' });
+    if (cache) { try { await cache.put(cacheKey, Response.json(location, { headers: { 'Cache-Control': 'public, max-age=2592000' } })); } catch { /* lookup still succeeds without cache */ } }
+    return json(location);
+  } catch (error) {
+    if (error instanceof LocationError) return json({ error: error.message }, error.status);
+    return json({ error: 'Location lookup is temporarily unavailable. Try again or choose the state and town manually.' }, 503);
+  }
 }
 const publicMedia = m => ({ id: m.id, place_id: m.place_id, content_type: m.content_type, size: m.size, name: m.name, created_at: m.created_at, url: `/api/media/${m.id}` });
 const publicPlace = (p, media = []) => ({ ...p, favourite: !!p.favourite, media: media.map(publicMedia) });
@@ -244,6 +266,7 @@ export async function handleRequest(request, env) {
     if (mediaMatch && ['GET', 'HEAD'].includes(request.method)) return await serveMedia(request, env, id(mediaMatch[1]));
     assert(['POST', 'PATCH', 'PUT'].includes(request.method), 405, 'Method not allowed.');
     writeGuard(request);
+    if (request.method === 'POST' && path === '/api/map-location') return await detectMapLocation(request, env);
     const uploadMatch = path.match(/^\/api\/places\/([^/]+)\/media\/([^/]+)$/);
     if (request.method === 'PUT' && uploadMatch) return await upload(request, env, id(uploadMatch[1]), id(uploadMatch[2]));
     return await mutate(request, env, path);

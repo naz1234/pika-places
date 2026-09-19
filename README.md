@@ -10,6 +10,7 @@ A mobile-first shared place book for Malaysia. Save the food spots, cafés, stay
 - Search and filter by state, town/area, category and visit status.
 - Quick filters for Melaka, Johor and Klang, plus areas you add.
 - Original-post link, separate map link, notes, favourites and trip collections.
+- Automatic state / territory and town detection from supported map links, including shortened Google Maps links; manual corrections stay editable.
 - Automatic field saving after a short pause; no Save button is required in the form.
 - Shared records in D1 and uploaded screenshots/photos/videos in R2.
 - Automatic cross-device refresh while the app is open, normally within about five seconds of a successful save.
@@ -32,7 +33,9 @@ Do not save home addresses, sensitive documents, access codes, or private family
 | Video saved | An uploaded video file is stored separately in R2. |
 | Pending / Not synced | Some changes still exist only in this browser. Keep the app open with a connection. |
 
-Pasting a link does not download its video, import its thumbnail, infer an exact address, or scrape social platforms. Add your own screenshot and place details. Upload video only when you have permission to retain it. Image uploads are resized to 1800 px and re-encoded as JPEG to reduce storage and remove metadata; animated images become still images. Video is stored unchanged, without transcoding. Playback depends on the browser and codec.
+Pasting a social-post link does not download its video, import its thumbnail, infer an exact address, or scrape social platforms. Pasting a Google Maps, Waze or Apple Maps link into the map field tries to fill the Malaysian state / territory and town from its address or destination coordinates. Short links and coordinate lookups need internet. Unsupported, ambiguous or unavailable links leave manual entry available. Previously entered locations and corrections are kept. Add your own screenshot and remaining place details. Upload video only when you have permission to retain it. Image uploads are resized to 1800 px and re-encoded as JPEG to reduce storage and remove metadata; animated images become still images. Video is stored unchanged, without transcoding. Playback depends on the browser and codec.
+
+Map lookups run through `/api/map-location`. Only known map hosts can be fetched, including after redirects; requests have time, size and per-IP rate limits. Successful results are cached for 30 days in the Cloudflare edge cache. When a link provides coordinates but no state, the server uses [Photon](https://github.com/komoot/photon) with OpenStreetMap data. Its public endpoint permits reasonable usage without an availability guarantee. This is intended for a small shared collection, not bulk imports. For larger traffic, configure the `PHOTON_BASE_URL` Pages environment variable to a dedicated Photon-compatible service and redeploy. No API key or new database migration is needed for the default setup. Attribution appears beside detected locations obtained from Photon.
 
 ## Quick local start
 
