@@ -234,3 +234,8 @@ h1{font-size:32px}
 
 
 ::selection{background:#efd5f6;color:var(--ink)}
+
+.map-location-help{margin-top:-12px}
+.map-location-help .field-help{margin:0 0 8px}
+.map-location-help .button{font-size:12px;min-height:34px;padding:7px 12px}
+.map-location-help a{color:inherit;text-decoration:underline}

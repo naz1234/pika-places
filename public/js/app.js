@@ -1,6 +1,7 @@
 import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, mapLink, matchPlace, quickLocationFilter, safeUrl, sourceName, stateForTown, townSuggestions } from './model.js';
 import { openStore } from './store.js';
 import { SyncEngine } from './sync.js';
+import { MapAutofill } from './map-autofill.js';
 
 const $ = id => document.getElementById(id);
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -23,6 +24,11 @@ function mediaUrl(media) {
 function fillOptions(select, values) { for (const value of values) select.append(new Option(value, value)); }
 fillOptions($('state-filter'), STATES); fillOptions($('category-filter'), CATEGORIES);
 fillOptions($('place-form').elements.state, STATES); fillOptions($('place-form').elements.category, CATEGORIES);
+const mapAutofill = new MapAutofill({
+  fields: $('place-form').elements,
+  onChange: () => { renderTownSuggestions(); scheduleSave(); },
+  onStatus: (message, attribution = false) => { $('map-location-status').textContent = message; $('map-attribution').hidden = !attribution; }
+});
 
 function renderAreas() {
   const selected = filters.state || filters.area;
@@ -153,10 +159,14 @@ function openEditor(placeId = null) {
   renderTownSuggestions(); renderEditorMedia(true); $('editor').showModal();
   // Avoid opening the keyboard automatically when reviewing an existing place.
   $('close-editor').focus({ preventScroll: true });
+  mapAutofill.stop();
+  if (!editor.readonly) mapAutofill.start();
+  else { $('map-location-status').textContent = ''; $('map-attribution').hidden = true; }
 }
 async function closeEditor() {
   if (uploadsInProgress) { toast('Please wait while the selected files are prepared.'); return; }
-  if (!await saveEditor()) return;
+  mapAutofill.stop();
+  if (!await saveEditor()) { if (!editor.readonly) mapAutofill.start(); return; }
   $('editor').close(); editor = null;
 }
 function renderEditorMedia(force = false) {
@@ -252,6 +262,9 @@ $('editor').addEventListener('cancel',e=>{e.preventDefault();void closeEditor();
 $('place-form').addEventListener('submit',e=>{e.preventDefault();void closeEditor();});
 $('place-form').addEventListener('input',e=>{if(Object.hasOwn(DEFAULT_PLACE,e.target.name)) scheduleSave();});
 $('place-form').elements.state.addEventListener('change',()=>{renderTownSuggestions();scheduleSave();});
+for (const key of ['state', 'area']) $('place-form').elements[key].addEventListener('input', () => mapAutofill.edited(key));
+$('place-form').elements.map_url.addEventListener('input', () => mapAutofill.schedule());
+$('detect-map-location').addEventListener('click', () => mapAutofill.schedule());
 $('place-form').elements.area.addEventListener('change',e=>{
   const state = stateForTown(e.target.value, records);
   if (!$('place-form').elements.state.value && state) {
@@ -264,7 +277,7 @@ $('trash-place').addEventListener('click',async()=>{if(!await saveEditor()) retu
 $('cancel-trash').addEventListener('click',()=>$('confirm-dialog').close());
 $('confirm-trash').addEventListener('click',async()=>{
   if(!editor) return;
-  try { await engine.enqueue('trash',editor.id); $('confirm-dialog').close();$('editor').close();editor=null;toast('Moved to Trash. You can restore it in Settings.'); }
+  try { await engine.enqueue('trash',editor.id); mapAutofill.stop(); $('confirm-dialog').close();$('editor').close();editor=null;toast('Moved to Trash. You can restore it in Settings.'); }
   catch(error){showError(error);}
 });
 $('open-trash').addEventListener('click',()=>{$('settings').close();changeView('trash');});

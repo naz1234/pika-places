@@ -70,7 +70,8 @@
       <label>Place name<input name="title" maxlength="120" placeholder="E.g. a café in Melaka" autocomplete="off"></label>
       <div class="form-row"><label>State / territory<select name="state"><option value="">Not sure yet</option></select></label><label>Town / area<input name="area" maxlength="80" list="area-suggestions" placeholder="E.g. Klang" autocomplete="off"></label></div>
       <datalist id="area-suggestions"></datalist>
-      <label>Google Maps / Waze / Apple Maps link<input name="map_url" type="url" maxlength="2048" inputmode="url" placeholder="Optional — add the exact location" autocomplete="off"></label>
+      <label>Google Maps / Waze / Apple Maps link<input name="map_url" type="url" maxlength="2048" inputmode="url" placeholder="Paste a link to detect the location" autocomplete="off" aria-describedby="map-location-status"></label>
+      <div class="map-location-help"><p id="map-location-status" class="field-help" role="status">Paste a map link to detect the state and town. You can still edit them.</p><button type="button" id="detect-map-location" class="button secondary">Detect location</button><p id="map-attribution" class="field-help" hidden>Location data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>, via Photon.</p></div>
       <div class="form-row"><label>Category<select name="category"></select></label><label>Visit status<select name="status"><option value="want">Want to visit</option><option value="planned">Planned</option><option value="visited">Visited</option></select></label></div>
       <label>Trip / collection<input name="collection" maxlength="80" list="trip-suggestions" placeholder="Optional — e.g. Melaka weekend" autocomplete="off"></label><datalist id="trip-suggestions"></datalist>
       <label>My notes<textarea name="notes" maxlength="3000" rows="3" placeholder="What to try, parking tips, who to go with…"></textarea></label>
