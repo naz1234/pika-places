@@ -8,7 +8,7 @@ A mobile-first shared place book for Malaysia. Save the food spots, cafés, stay
 
 - Peach, coral and lavender phone interface with navy text, matched to the Pika Places family icon; responsive desktop layout.
 - Search and filter by state, town/area, category and visit status.
-- Quick filters for Melaka, Johor and Klang, plus areas you add.
+- State / federal territory and **Nama tempat** dropdowns covering all 13 states and 3 federal territories, with 447 town/district options plus saved custom areas. Towns follow the selected state; see [location sources](docs/malaysia-locations.md).
 - Original-post link, separate map link, notes, favourites and trip collections.
 - Automatic state / territory and town detection from supported map links, including shortened Google Maps links; manual corrections stay editable.
 - Automatic field saving after a short pause; no Save button is required in the form.

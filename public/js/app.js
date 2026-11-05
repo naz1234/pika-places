@@ -1,4 +1,4 @@
-import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, mapLink, matchPlace, quickLocationFilter, safeUrl, sourceName, stateForTown, townSuggestions } from './model.js';
+import { CATEGORIES, DEFAULT_PLACE, MAX_FILE_BYTES, STATES, STATE_LABELS, mapLink, matchPlace, safeUrl, sourceName, stateForTown, townSuggestions } from './model.js';
 import { openStore } from './store.js';
 import { SyncEngine } from './sync.js';
 import { MapAutofill } from './map-autofill.js';
@@ -9,7 +9,7 @@ const make = (tag, cls, text) => { const el = document.createElement(tag); if (c
 const icon = name => { const el = document.createElementNS(svgNS, 'svg'); el.setAttribute('class', 'icon'); el.setAttribute('aria-hidden', 'true'); const use = document.createElementNS(svgNS, 'use'); use.setAttribute('href', `#i-${name}`); el.append(use); return el; };
 function button(text, cls, action, iconName) { const b = make('button', cls); b.type = 'button'; if (iconName) b.append(icon(iconName)); if (text) b.append(document.createTextNode(text)); if (action) b.addEventListener('click', action); return b; }
 function external(text, url, iconName) { const a = make('a', '', text); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; if (iconName) a.prepend(icon(iconName)); return a; }
-const filters = { query: '', area: '', category: '', status: '', state: '', collection: '', view: 'saved' };
+const filters = { query: '', area: '', status: '', state: '', collection: '', view: 'saved' };
 let records = [], jobs = [], store, engine, editor = null, editorTimer, editorChain = Promise.resolve(), uploadsInProgress = 0, toastTimer;
 const blobUrls = new Map();
 const visitNames = { want: 'Want to visit', planned: 'Planned', visited: 'Visited' };
@@ -21,32 +21,34 @@ function mediaUrl(media) {
   if (!blobUrls.has(media.id)) blobUrls.set(media.id, URL.createObjectURL(media.blob));
   return blobUrls.get(media.id);
 }
-function fillOptions(select, values) { for (const value of values) select.append(new Option(value, value)); }
-fillOptions($('state-filter'), STATES); fillOptions($('category-filter'), CATEGORIES);
-fillOptions($('place-form').elements.state, STATES); fillOptions($('place-form').elements.category, CATEGORIES);
+function fillOptions(select, values, labels = {}) { for (const value of values) select.append(new Option(labels[value] || value, value)); }
+fillOptions($('state-filter'), STATES, STATE_LABELS);
+fillOptions($('place-form').elements.state, STATES, STATE_LABELS); fillOptions($('place-form').elements.category, CATEGORIES);
 const mapAutofill = new MapAutofill({
   fields: $('place-form').elements,
   onChange: () => { renderTownSuggestions(); scheduleSave(); },
   onStatus: (message, attribution = false) => { $('map-location-status').textContent = message; $('map-attribution').hidden = !attribution; }
 });
 
-function renderAreas() {
-  const selected = filters.state || filters.area;
-  const all = [...new Set(['Melaka', 'Johor', 'Klang', ...records.filter(p => !p.deleted_at).flatMap(p => [p.state, p.area]).filter(Boolean)])];
-  const root = $('area-filters'); const scroll = root.scrollLeft; root.replaceChildren();
-  for (const value of ['', ...all]) {
-    const b = button(value || 'All', 'area-chip', () => { Object.assign(filters, quickLocationFilter(value)); $('state-filter').value = filters.state; render(); });
-    b.setAttribute('aria-pressed', String(selected === value)); root.append(b);
+function renderTownFilter() {
+  const select = $('area-filter');
+  const towns = townSuggestions(filters.state, records, { includeDeleted: filters.view === 'trash' });
+  // Keep the selection stable if its final saved place disappears during a sync.
+  if (filters.area && !towns.includes(filters.area)) towns.push(filters.area);
+  const signature = JSON.stringify(towns);
+  if (select.dataset.options !== signature) {
+    select.replaceChildren(new Option('Nama tempat', ''), ...towns.map(town => new Option(town, town)));
+    select.dataset.options = signature;
   }
-  root.scrollLeft = scroll;
+  select.value = filters.area;
 }
 function renderTownSuggestions() {
   const state = $('place-form').elements.state.value;
   $('area-suggestions').replaceChildren(...townSuggestions(state, records).map(town => new Option(town, town)));
 }
 function clearFilters() {
-  Object.assign(filters, { query: '', area: '', category: '', status: '', state: '', collection: '' });
-  for (const key of ['search', 'state-filter', 'category-filter', 'status-filter']) $(key).value = '';
+  Object.assign(filters, { query: '', area: '', status: '', state: '', collection: '' });
+  for (const key of ['search', 'state-filter', 'area-filter', 'status-filter']) $(key).value = '';
   render();
 }
 function changeView(view) { filters.view = view; clearFilters(); }
@@ -83,13 +85,13 @@ function placeCard(place) {
   article.append(cover, body); return article;
 }
 function render() {
-  renderAreas();
+  renderTownFilter();
   const pendingIds = new Set(records.flatMap(p => p.media.filter(m => m.pending).map(m => m.id)));
   for (const [key, value] of blobUrls) if (!pendingIds.has(key)) { URL.revokeObjectURL(value); blobUrls.delete(key); }
   for (const b of document.querySelectorAll('[data-view]')) { if (b.dataset.view === filters.view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
   const titles = { saved: 'Saved inspiration', favourites: 'The favourites', trips: 'Little trips, good finds', trash: 'Trash' };
   $('view-title').textContent = titles[filters.view]; $('browse-controls').hidden = filters.view === 'trips';
-  $('clear-filters').hidden = !['query', 'area', 'state', 'category', 'status', 'collection'].some(k => filters[k]);
+  $('clear-filters').hidden = !['query', 'area', 'state', 'status', 'collection'].some(k => filters[k]);
   $('collection-filter').hidden = !filters.collection; $('collection-filter').textContent = `Trip: ${filters.collection}`;
   const grid = $('place-grid'); grid.replaceChildren();
   let visible;
@@ -99,14 +101,14 @@ function render() {
     for (const [title, places] of groups) { const b = button('', 'trip-card', () => { filters.view = 'saved'; filters.collection = title; render(); }); b.append(icon('trip'), make('h3', '', title), make('p', '', `${places.length} saved place${places.length === 1 ? '' : 's'} · ${[...new Set(places.map(p => p.state).filter(Boolean))].join(', ') || 'Malaysia'}`)); grid.append(b); }
     visible = [...groups]; $('result-count').textContent = `${groups.size} collection${groups.size === 1 ? '' : 's'}`;
   } else {
-    visible = records.filter(p => matchPlace(p, filters) && (!filters.state || p.state === filters.state));
+    visible = records.filter(p => matchPlace(p, filters));
     for (const place of visible) grid.append(placeCard(place));
     $('result-count').textContent = `${visible.length} place${visible.length === 1 ? '' : 's'}${jobs.length ? ` · ${jobs.length} pending change${jobs.length === 1 ? '' : 's'}` : ''}`;
   }
   $('empty-state').hidden = visible.length > 0;
-  const isFiltered = ['query','area','category','state','status','collection'].some(k => filters[k]);
+  const isFiltered = ['query','area','state','status','collection'].some(k => filters[k]);
   let title = 'Your next good find goes here.', copy = 'That café in Melaka. A food stop in Klang. Keep the post, add a screenshot, and find it when you’re nearby.';
-  if (isFiltered) { title = 'No places match just yet.'; copy = 'Try a different area, category or search.'; }
+  if (isFiltered) { title = 'No places match just yet.'; copy = 'Try a different state, nama tempat, visit status or search.'; }
   else if (filters.view === 'favourites') { title = 'Keep the best ones close.'; copy = 'Tap the star on a saved place to find it here.'; }
   else if (filters.view === 'trips') { title = 'A few good stops make a trip.'; copy = 'Open a place and give it a Trip / collection name, such as “Melaka weekend”. Places with the same name stay together.'; }
   else if (filters.view === 'trash') { title = 'Nothing in Trash.'; copy = 'Places moved to Trash can be restored here. Only the owner can permanently clean up storage.'; }
@@ -250,7 +252,7 @@ function hasUnsavedForm() {
 }
 
 $('search').addEventListener('input',e=>{filters.query=e.target.value;render();});
-for(const [id,key] of [['state-filter','state'],['category-filter','category'],['status-filter','status']]) $(id).addEventListener('change',e=>{filters[key]=e.target.value;if(key==='state') filters.area='';render();});
+for(const [id,key] of [['state-filter','state'],['area-filter','area'],['status-filter','status']]) $(id).addEventListener('change',e=>{filters[key]=e.target.value;if(key==='state') filters.area='';render();});
 $('clear-filters').addEventListener('click',clearFilters);
 for(const b of document.querySelectorAll('[data-view]')) b.addEventListener('click',()=>changeView(b.dataset.view));
 for(const id of ['add-button','empty-add']) $(id).addEventListener('click',()=>{if(engine) openEditor();else toast('Device storage is not ready.');});
