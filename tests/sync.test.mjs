@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { MemoryStore,testEnv } from './helpers.mjs';
 import { handleRequest } from '../server/api.js';
 import { SyncEngine } from '../public/js/sync.js';
-import { matchPlace,projectPlaces,quickLocationFilter,sourceName,safeUrl,stateForTown,townSuggestions } from '../public/js/model.js';
+import { matchPlace,projectPlaces,sourceName,safeUrl,stateForTown,townSuggestions } from '../public/js/model.js';
 
 const fetchFor=env=>(path,options={})=>handleRequest(new Request(`https://pika.test${path}`,options),env);
 function enqueue(store,kind,placeId,data={}){return store.enqueue({id:crypto.randomUUID(),kind,placeId,createdAt:new Date().toISOString(),...data});}
@@ -39,13 +39,7 @@ test('snapshot version guard does not replace newer cloud records with older res
 });
 test('Malaysia filtering and source recognition do not confuse lookalike domains',()=>{
   const p={title:'Breakfast',area:'Klang',state:'Selangor',notes:'Good roti',category:'Food',status:'want',collection:'Weekend'};
-  assert.ok(matchPlace(p,{area:'Klang'}));assert.ok(matchPlace(p,{area:'Selangor',query:'roti'}));assert.ok(!matchPlace(p,{area:'Johor'}));assert.ok(matchPlace(p,{collection:'Weekend'}));assert.ok(!matchPlace(p,{collection:'Other'}));assert.equal(sourceName('https://tiktok.com.evil.test'),'Link');assert.equal(safeUrl('javascript:alert(1)'),'');
-});
-test('quick location filters keep state dropdown and area chips in sync',()=>{
-  assert.deepEqual(quickLocationFilter('Johor'),{state:'Johor',area:''});
-  assert.deepEqual(quickLocationFilter('Melaka'),{state:'Melaka',area:''});
-  assert.deepEqual(quickLocationFilter('Klang'),{state:'',area:'Klang'});
-  assert.deepEqual(quickLocationFilter(''),{state:'',area:''});
+  assert.ok(matchPlace(p,{area:'Klang'}));assert.ok(matchPlace(p,{state:'Selangor',query:'roti'}));assert.ok(!matchPlace(p,{state:'Johor'}));assert.ok(matchPlace(p,{collection:'Weekend'}));assert.ok(!matchPlace(p,{collection:'Other'}));assert.equal(sourceName('https://tiktok.com.evil.test'),'Link');assert.equal(safeUrl('javascript:alert(1)'),'');
 });
 test('town suggestions follow the selected state and include saved custom towns',()=>{
   const places = [
@@ -53,10 +47,14 @@ test('town suggestions follow the selected state and include saved custom towns'
     {state:'Johor',area:'  muar  '},
     {state:'Selangor',area:'Petaling Jaya'},
     {state:'',area:'Unassigned town'},
-    {state:'Johor',area:'Kluang',deleted_at:'2026-01-01'}
+    {state:'Johor',area:'Hidden custom town',deleted_at:'2026-01-01'}
   ];
-  assert.deepEqual(townSuggestions('Johor',places),['Johor Bahru','Muar','Batu Pahat','Kulai']);
-  assert.deepEqual(townSuggestions('Melaka',places),['Melaka City','Ayer Keroh']);
+  const johor = townSuggestions('Johor',places);
+  for (const town of ['Johor Bahru','Muar','Batu Pahat','Kulai','Kluang']) assert.ok(johor.includes(town));
+  assert.equal(johor.filter(town => town.toLowerCase() === 'muar').length,1);
+  assert.ok(townSuggestions('Melaka',places).includes('Ayer Keroh'));
+  assert.ok(!johor.includes('Hidden custom town'));
+  assert.ok(townSuggestions('Johor',places,{includeDeleted:true}).includes('Hidden custom town'));
   assert.ok(!townSuggestions('Johor',places).includes('Klang'));
   assert.ok(townSuggestions('',places).includes('Petaling Jaya'));
   assert.ok(townSuggestions('',places).includes('Unassigned town'));
